@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Navigation from "./components/Navigation";
+import Shop from "./pages/Shop";
 import "./App.css";
 
 function App() {
@@ -15,14 +16,18 @@ function App() {
 				setSimulate={setSimulate}
 			/>
 			<main className="max-w-6xl mx-auto px-4 py-8">
-				<h1 className="text-3xl font-bold text-slate-900 mb-6">
-					{tab === "shop" ? "Shop" : "Admin"} Dashboard
-				</h1>
-				<p className="text-slate-600">
-					{tab === "shop"
-						? "Welcome to the Festival Drink Shop!"
-						: "Admin panel for managing the festival drink system."}
-				</p>
+				{tab === "shop" ? (
+					<Shop />
+				) : (
+					<>
+						<h1 className="text-3xl font-bold text-slate-900 mb-6">
+							Admin Dashboard
+						</h1>
+						<p className="text-slate-600">
+							Admin panel for managing the festival drink system.
+						</p>
+					</>
+				)}
 			</main>
 		</>
 	);

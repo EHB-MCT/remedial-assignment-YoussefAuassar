@@ -1,18 +1,18 @@
 import { ShoppingCart } from "lucide-react";
-import type { Product } from "../../database/products";
+import type { Product } from "../../lib/supabase";
 import { niceCurrency } from "../../utils/currency";
 
 interface ProductCardProps {
 	product: Product;
-	onAddToCart: (productId: string) => void;
+	onAddToCart: (productId: number) => void;
 }
 
 export default function ProductCard({
 	product,
 	onAddToCart
 }: ProductCardProps) {
-	const stockPercentage = product.initialStock
-		? (product.stock / product.initialStock) * 100
+	const stockPercentage = product.initialstock
+		? (product.stock / product.initialstock) * 100
 		: 0;
 
 	return (

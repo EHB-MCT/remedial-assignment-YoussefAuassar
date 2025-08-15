@@ -1,48 +1,51 @@
+import { supabase } from "../lib/supabase";
+
 export interface Product {
-	id: string;
+	id: number; // Changed from string to number to match database int8
 	name: string;
 	emoji: string;
 	price: number;
 	stock: number;
-	initialStock: number;
-	dynamic: boolean;
+	initialstock: number;
 }
 
-export const initialProducts: Product[] = [
-	{
-		id: "beer",
-		name: "Pils",
-		emoji: "🍺",
-		price: 3.0,
-		stock: 120,
-		initialStock: 120,
-		dynamic: true
-	},
-	{
-		id: "water",
-		name: "Water",
-		emoji: "💧",
-		price: 2.0,
-		stock: 160,
-		initialStock: 160,
-		dynamic: true
-	},
-	{
-		id: "cola",
-		name: "Cola",
-		emoji: "🥤",
-		price: 2.8,
-		stock: 140,
-		initialStock: 140,
-		dynamic: true
-	},
-	{
-		id: "coffee",
-		name: "Koffie",
-		emoji: "☕",
-		price: 2.2,
-		stock: 80,
-		initialStock: 80,
-		dynamic: true
+// Real database query function
+export async function getProducts(): Promise<Product[]> {
+	console.log("🔍 Attempting to fetch products from Supabase...");
+	console.log("🔍 Supabase URL:", import.meta.env.VITE_SUPABASE_URL);
+	console.log(
+		"🔍 Supabase Key exists:",
+		!!import.meta.env.VITE_SUPABASE_ANON_KEY
+	);
+
+	const { data, error } = await supabase.from("products").select("*");
+
+	if (error) {
+		console.error("❌ Error fetching products:", error);
+		return [];
 	}
-];
+
+	console.log("✅ Successfully fetched products from database:", data);
+	return data || [];
+}
+
+// Update product in database
+export async function updateProduct(
+	productId: number, // Changed from string to number
+	updates: Partial<Product>
+): Promise<boolean> {
+	const { error } = await supabase
+		.from("products")
+		.update(updates)
+		.eq("id", productId);
+
+	if (error) {
+		console.error("Error updating product:", error);
+		return false;
+	}
+
+	return true;
+}
+
+// Mock data is now commented out in supabase.ts
+// No fallback data available - app will crash if database fails

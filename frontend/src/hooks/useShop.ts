@@ -1,17 +1,43 @@
 import { useState, useEffect } from "react";
-import { initialProducts } from "../database/products";
-import type { Product } from "../database/products";
+import { fetchProducts, type Product } from "../lib/supabase";
 import type { CartItem } from "../types/cart";
 
 export function useShop() {
-	const [products, setProducts] = useState<Product[]>(() => {
-		// Try to load from admin storage first, fallback to initial products
-		const adminProducts = localStorage.getItem("adminProducts");
-		if (adminProducts) {
-			return JSON.parse(adminProducts);
+	const [products, setProducts] = useState<Product[]>([]);
+	const [loading, setLoading] = useState(true);
+
+	// Load products from database on component mount
+	useEffect(() => {
+		async function loadProducts() {
+			try {
+				setLoading(true);
+				const dbProducts = await fetchProducts();
+
+				// Prioritize database data, fallback to admin storage
+				if (dbProducts && dbProducts.length > 0) {
+					console.log("✅ Using database products:", dbProducts);
+					setProducts(dbProducts);
+				} else {
+					const adminProducts = localStorage.getItem("adminProducts");
+					if (adminProducts) {
+						console.log("📱 Using localStorage products");
+						setProducts(JSON.parse(adminProducts));
+					} else {
+						console.log("🔄 No fallback data available");
+						setProducts([]); // Empty array - no fallback
+					}
+				}
+			} catch (error) {
+				console.error("Error loading products:", error);
+				// No fallback data available if database fails
+				setProducts([]);
+			} finally {
+				setLoading(false);
+			}
 		}
-		return initialProducts;
-	});
+
+		loadProducts();
+	}, []);
 	const [balance, setBalance] = useState(50);
 	const [cart, setCart] = useState<CartItem[]>([]);
 
@@ -28,10 +54,10 @@ export function useShop() {
 		return () => window.removeEventListener("storage", handleStorageChange);
 	}, []);
 
-	const currentPrice = (pid: string) =>
+	const currentPrice = (pid: number) =>
 		products.find((p) => p.id === pid)?.price ?? 0;
 
-	const addToCart = (pid: string) => {
+	const addToCart = (pid: number) => {
 		setProducts((prev) =>
 			prev.map((p) =>
 				p.id === pid && p.stock > 0 ? { ...p, stock: p.stock - 1 } : p
@@ -47,7 +73,7 @@ export function useShop() {
 		});
 	};
 
-	const removeFromCart = (pid: string, priceAtAdd: number) => {
+	const removeFromCart = (pid: number, priceAtAdd: number) => {
 		setCart((prev) => {
 			const idx = prev.findIndex(
 				(c) => c.productId === pid && c.priceAtAdd === priceAtAdd
@@ -113,6 +139,7 @@ export function useShop() {
 
 	return {
 		products,
+		loading,
 		balance,
 		cart,
 		cartTotal,

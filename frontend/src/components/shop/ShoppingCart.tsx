@@ -1,5 +1,5 @@
 import { ShoppingCart as ShoppingCartIcon } from "lucide-react";
-import type { Product } from "../../database/products";
+import type { Product } from "../../lib/supabase";
 import { niceCurrency } from "../../utils/currency";
 import CartRow from "./CartRow";
 
@@ -9,7 +9,7 @@ interface ShoppingCartProps {
 	cart: CartItem[];
 	products: Product[];
 	cartTotal: number;
-	removeFromCart: (productId: string, priceAtAdd: number) => void;
+	removeFromCart: (productId: number, priceAtAdd: number) => void;
 	onCheckout: () => void;
 }
 

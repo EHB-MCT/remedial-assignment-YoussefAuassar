@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import type { Product } from "../database/products";
+import type { Product } from "../lib/supabase";
 import type { SalesRecord, EconomicMetrics } from "../types/admin";
 import { AdminService } from "../services/adminService";
-import { initialProducts } from "../database/products";
+import { fetchProducts } from "../lib/supabase";
 import { ADMIN_CONSTANTS } from "../constants/storage";
 
 export function useAdmin() {
@@ -48,15 +48,28 @@ export function useAdmin() {
 			setIsLoading(true);
 			setError(null);
 
+			// Try to load from database first
+			let dbProducts: Product[] = [];
+			try {
+				dbProducts = await fetchProducts();
+			} catch (dbError) {
+				console.warn(
+					"Database connection failed, using local storage:",
+					dbError
+				);
+			}
+
 			const storedProducts = AdminService.getProducts();
 			const storedSales = AdminService.getSalesHistory();
 
-			if (storedProducts.length > 0) {
+			// Use database products if available, otherwise fallback to stored
+			if (dbProducts.length > 0) {
+				setProducts(dbProducts);
+			} else if (storedProducts.length > 0) {
 				setProducts(storedProducts);
 			} else {
-				// Initialize with default products if none exist
-				setProducts(initialProducts);
-				AdminService.saveProducts(initialProducts);
+				// No fallback data available
+				setProducts([]);
 			}
 
 			if (storedSales.length > 0) {

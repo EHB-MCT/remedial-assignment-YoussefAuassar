@@ -1,5 +1,5 @@
 export interface CartItem {
-	productId: string;
+	productId: number; // Changed from string to number to match Product.id
 	qty: number;
 	priceAtAdd: number;
 }

@@ -1,0 +1,305 @@
+import React, { useState } from "react";
+import type { Product } from "../../database/products";
+import { ADMIN_CONSTANTS } from "../../constants/storage";
+
+interface ProductManagementProps {
+	products: Product[];
+	onUpdatePrice: (productId: string, newPrice: number) => void;
+	onUpdateStock: (productId: string, newStock: number) => void;
+	onSimulatePurchase: (productId: string) => void;
+	onResetEconomy: () => void;
+}
+
+export default function ProductManagement({
+	products,
+	onUpdatePrice,
+	onUpdateStock,
+	onSimulatePurchase,
+	onResetEconomy
+}: ProductManagementProps) {
+	// Track which product is currently being edited
+	const [editingProduct, setEditingProduct] = useState<string | null>(null);
+
+	return (
+		<div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+			{/* Header with title and reset button */}
+			<div className="flex items-center justify-between mb-6">
+				<h2 className="text-xl font-semibold text-slate-900">
+					Product Management
+				</h2>
+				<button
+					onClick={onResetEconomy}
+					className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
+				>
+					Reset Economy
+				</button>
+			</div>
+
+			{/* Product table */}
+			<div className="overflow-x-auto">
+				<table className="w-full">
+					<thead>
+						<tr className="border-b border-slate-200">
+							<th className="text-left py-3 px-4 font-medium text-slate-700">
+								Product
+							</th>
+							<th className="text-left py-3 px-4 font-medium text-slate-700">
+								Price
+							</th>
+							<th className="text-left py-3 px-4 font-medium text-slate-700">
+								Stock
+							</th>
+							<th className="text-left py-3 px-4 font-medium text-slate-700">
+								Actions
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						{/* Render each product row */}
+						{products.map((product) => (
+							<ProductRow
+								key={product.id}
+								product={product}
+								isEditing={editingProduct === product.id}
+								onEditStart={() => setEditingProduct(product.id)}
+								onEditCancel={() => setEditingProduct(null)}
+								onUpdatePrice={onUpdatePrice}
+								onUpdateStock={onUpdateStock}
+								onSimulatePurchase={onSimulatePurchase}
+							/>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
+}
+
+// ProductRow component for individual product rows
+interface ProductRowProps {
+	product: Product;
+	isEditing: boolean;
+	onEditStart: () => void;
+	onEditCancel: () => void;
+	onUpdatePrice: (productId: string, newPrice: number) => void;
+	onUpdateStock: (productId: string, newStock: number) => void;
+	onSimulatePurchase: (productId: string) => void;
+}
+
+function ProductRow({
+	product,
+	isEditing,
+	onEditStart,
+	onEditCancel,
+	onUpdatePrice,
+	onUpdateStock,
+	onSimulatePurchase
+}: ProductRowProps) {
+	// Temporary values for editing
+	const [tempPrice, setTempPrice] = useState(product.price);
+	const [tempStock, setTempStock] = useState(product.stock);
+
+	// Check stock levels for visual indicators
+	const isStockLow = product.stock <= 10 && product.stock > 0;
+	const isStockEmpty = product.stock === 0;
+
+	// Handle price updates with validation
+	const handlePriceUpdate = () => {
+		if (tempPrice !== product.price) {
+			onUpdatePrice(product.id, tempPrice);
+		}
+		onEditCancel();
+	};
+
+	// Handle stock updates with validation
+	const handleStockUpdate = () => {
+		if (tempStock !== product.stock) {
+			onUpdateStock(product.id, tempStock);
+		}
+		onEditCancel();
+	};
+
+	// Reset temp values when editing is cancelled
+	const handleCancel = () => {
+		setTempPrice(product.price);
+		setTempStock(product.stock);
+		onEditCancel();
+	};
+
+	return (
+		<tr className="border-b border-slate-100 hover:bg-slate-50">
+			{/* Product info column */}
+			<td className="py-4 px-4">
+				<div className="flex items-center gap-3">
+					<span className="text-2xl">{product.emoji}</span>
+					<div>
+						<div className="font-medium text-slate-900">{product.name}</div>
+						<div className="text-sm text-slate-500">
+							Initial: {product.initialStock}
+						</div>
+					</div>
+				</div>
+			</td>
+
+			{/* Price column */}
+			<td className="py-4 px-4">
+				{isEditing ? (
+					<div className="flex items-center gap-2">
+						<input
+							type="number"
+							value={tempPrice}
+							onChange={(e) => setTempPrice(Number(e.target.value))}
+							step={ADMIN_CONSTANTS.PRICE_STEP}
+							min={ADMIN_CONSTANTS.MIN_PRICE}
+							max={ADMIN_CONSTANTS.MAX_PRICE}
+							className="w-20 px-2 py-1 border border-slate-300 rounded text-sm"
+						/>
+						{/* Price adjustment buttons */}
+						<button
+							onClick={() =>
+								setTempPrice((prev) =>
+									Math.min(
+										prev + ADMIN_CONSTANTS.PRICE_STEP,
+										ADMIN_CONSTANTS.MAX_PRICE
+									)
+								)
+							}
+							className="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-sm"
+						>
+							+
+						</button>
+						<button
+							onClick={() =>
+								setTempPrice((prev) =>
+									Math.max(
+										prev - ADMIN_CONSTANTS.PRICE_STEP,
+										ADMIN_CONSTANTS.MIN_PRICE
+									)
+								)
+							}
+							className="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-sm"
+						>
+							−
+						</button>
+					</div>
+				) : (
+					<div className="flex items-center gap-2">
+						<span className="font-medium">€{product.price.toFixed(2)}</span>
+						<button
+							onClick={onEditStart}
+							className="text-slate-400 hover:text-slate-600 text-sm"
+						>
+							✏️
+						</button>
+					</div>
+				)}
+			</td>
+
+			{/* Stock column */}
+			<td className="py-4 px-4">
+				{isEditing ? (
+					<div className="flex items-center gap-2">
+						<input
+							type="number"
+							value={tempStock}
+							onChange={(e) => setTempStock(Number(e.target.value))}
+							step={ADMIN_CONSTANTS.STOCK_STEP}
+							min={ADMIN_CONSTANTS.MIN_STOCK}
+							max={ADMIN_CONSTANTS.MAX_STOCK}
+							className={`w-20 px-2 py-1 border rounded text-sm ${
+								isStockEmpty
+									? "border-red-300 bg-red-50"
+									: isStockLow
+									? "border-orange-300 bg-orange-50"
+									: "border-slate-300"
+							}`}
+						/>
+						{/* Stock adjustment buttons */}
+						<button
+							onClick={() =>
+								setTempStock((prev) =>
+									Math.min(
+										prev + ADMIN_CONSTANTS.STOCK_STEP,
+										ADMIN_CONSTANTS.MAX_STOCK
+									)
+								)
+							}
+							className="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-sm"
+						>
+							+
+						</button>
+						<button
+							onClick={() =>
+								setTempStock((prev) =>
+									Math.max(
+										prev - ADMIN_CONSTANTS.STOCK_STEP,
+										ADMIN_CONSTANTS.MIN_STOCK
+									)
+								)
+							}
+							className="px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-sm"
+						>
+							−
+						</button>
+					</div>
+				) : (
+					<div className="flex items-center gap-2">
+						<span
+							className={`font-medium ${
+								isStockEmpty
+									? "text-red-600"
+									: isStockLow
+									? "text-orange-600"
+									: "text-slate-900"
+							}`}
+						>
+							{product.stock}
+						</span>
+						<button
+							onClick={onEditStart}
+							className="text-slate-400 hover:text-slate-600 text-sm"
+						>
+							✏️
+						</button>
+					</div>
+				)}
+			</td>
+
+			{/* Actions column */}
+			<td className="py-4 px-4">
+				{isEditing ? (
+					<div className="flex items-center gap-2">
+						{/* Save button */}
+						<button
+							onClick={() => {
+								handlePriceUpdate();
+								handleStockUpdate();
+							}}
+							className="px-3 py-1 bg-emerald-600 text-white rounded text-sm hover:bg-emerald-700"
+						>
+							Save
+						</button>
+						{/* Cancel button */}
+						<button
+							onClick={handleCancel}
+							className="px-3 py-1 bg-slate-300 text-slate-700 rounded text-sm hover:bg-slate-400"
+						>
+							Cancel
+						</button>
+					</div>
+				) : (
+					<div className="flex items-center gap-2">
+						{/* Simulate purchase button */}
+						<button
+							onClick={() => onSimulatePurchase(product.id)}
+							disabled={product.stock <= 0}
+							className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+						>
+							Simulate Sale
+						</button>
+					</div>
+				)}
+			</td>
+		</tr>
+	);
+}

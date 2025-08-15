@@ -1,6 +1,7 @@
-import { useState } from "react";
-import Navigation from "./components/Navigation";
+import Navigation from "./components/common/Navigation";
 import Shop from "./pages/Shop";
+import Admin from "./pages/Admin";
+import { useState } from "react";
 import "./App.css";
 
 function App() {
@@ -15,18 +16,13 @@ function App() {
 				simulate={simulate}
 				setSimulate={setSimulate}
 			/>
-			<main className="max-w-6xl mx-auto px-4 py-8">
+			<main>
 				{tab === "shop" ? (
-					<Shop />
+					<div className="max-w-6xl mx-auto px-4 py-8">
+						<Shop />
+					</div>
 				) : (
-					<>
-						<h1 className="text-3xl font-bold text-slate-900 mb-6">
-							Admin Dashboard
-						</h1>
-						<p className="text-slate-600">
-							Admin panel for managing the festival drink system.
-						</p>
-					</>
+					<Admin />
 				)}
 			</main>
 		</>

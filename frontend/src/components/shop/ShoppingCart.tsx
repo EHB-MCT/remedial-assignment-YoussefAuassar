@@ -1,9 +1,9 @@
 import { ShoppingCart as ShoppingCartIcon } from "lucide-react";
-import type { Product } from "../database/products";
-import { niceCurrency } from "../utils/currency";
+import type { Product } from "../../database/products";
+import { niceCurrency } from "../../utils/currency";
 import CartRow from "./CartRow";
 
-import type { CartItem } from "../types/cart";
+import type { CartItem } from "../../types/cart";
 
 interface ShoppingCartProps {
 	cart: CartItem[];

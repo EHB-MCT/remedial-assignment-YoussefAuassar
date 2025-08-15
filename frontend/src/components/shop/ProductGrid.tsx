@@ -1,5 +1,5 @@
-import type { Product } from "../database/products";
-import { niceCurrency } from "../utils/currency";
+import type { Product } from "../../database/products";
+import { niceCurrency } from "../../utils/currency";
 import ProductCard from "./ProductCard";
 
 interface ProductGridProps {

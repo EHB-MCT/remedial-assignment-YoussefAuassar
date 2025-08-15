@@ -1,7 +1,7 @@
-import type { Product } from "../database/products";
-import { niceCurrency } from "../utils/currency";
+import type { Product } from "../../database/products";
+import { niceCurrency } from "../../utils/currency";
 
-import type { CartItem } from "../types/cart";
+import type { CartItem } from "../../types/cart";
 
 /**
  * Props for the CartRow component

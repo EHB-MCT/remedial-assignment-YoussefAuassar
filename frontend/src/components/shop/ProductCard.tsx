@@ -1,6 +1,6 @@
 import { ShoppingCart } from "lucide-react";
-import type { Product } from "../database/products";
-import { niceCurrency } from "../utils/currency";
+import type { Product } from "../../database/products";
+import { niceCurrency } from "../../utils/currency";
 
 interface ProductCardProps {
 	product: Product;

@@ -1,5 +1,5 @@
-import ProductCard from "../components/ProductCard";
-import ShoppingCart from "../components/ShoppingCart";
+import ProductCard from "../components/shop/ProductCard";
+import ShoppingCart from "../components/shop/ShoppingCart";
 import { useShop } from "../hooks/useShop";
 
 export default function Shop() {
@@ -14,7 +14,7 @@ export default function Shop() {
 	} = useShop();
 
 	return (
-		<div>
+		<div className="max-w-7xl mx-auto px-4 py-6">
 			{/* Saldo at the top spanning full width */}
 			<div className="mb-6 text-sm text-slate-600 text-left">
 				Saldo:{" "}

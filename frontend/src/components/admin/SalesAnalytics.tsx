@@ -14,10 +14,13 @@ export default function SalesAnalytics({
 	getProductStats
 }: SalesAnalyticsProps) {
 	// Get the selected product details
-	const product = products.find((p) => p.id === selectedProduct);
+	const product = products.find((p) => p.id === parseInt(selectedProduct));
 
 	// Get sales statistics for the selected product
 	const stats = selectedProduct ? getProductStats(selectedProduct) : null;
+
+	// Debug logging
+	console.log("SalesAnalytics Debug:", { selectedProduct, product, stats });
 
 	if (!selectedProduct) {
 		return (

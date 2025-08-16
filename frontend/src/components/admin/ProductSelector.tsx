@@ -36,10 +36,14 @@ export default function ProductSelector({
 					<button
 						key={product.id}
 						onClick={() =>
-							onProductSelect(selectedProduct === product.id ? "" : product.id)
+							onProductSelect(
+								selectedProduct === product.id.toString()
+									? ""
+									: product.id.toString()
+							)
 						}
 						className={`p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
-							selectedProduct === product.id
+							selectedProduct === product.id.toString()
 								? "border-slate-900 bg-slate-900 text-white"
 								: "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100"
 						}`}

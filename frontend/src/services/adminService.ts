@@ -7,7 +7,7 @@ import type {
 } from "../types/admin";
 import { STORAGE_KEYS, DEFAULT_QUANTITY_RANGE } from "../constants/storage";
 import {
-	getSalesHistory,
+	getSalesHistory as dbGetSalesHistory,
 	addSaleRecord as dbAddSaleRecord
 } from "../database/sales";
 import {
@@ -68,18 +68,27 @@ export class AdminService {
 
 	// Sales Management - NOW USING DATABASE
 	static async getSalesHistory(): Promise<SalesRecord[]> {
-		const dbSales = await getSalesHistory();
+		console.log("🔄 AdminService.getSalesHistory called");
+		const dbSales = await dbGetSalesHistory();
+		console.log("📊 Raw database sales:", dbSales);
+		console.log("📊 Database sales count:", dbSales.length);
+
 		// Convert DBSalesRecord to SalesRecord for backward compatibility
-		return dbSales.map((sale) => ({
+		const convertedSales = dbSales.map((sale, index) => ({
 			productId: sale.product_id.toString(),
 			quantity: sale.quantity,
 			revenue: sale.revenue,
-			timestamp: Date.now(), // Use current timestamp for old format
+			timestamp: sale.created_at
+				? new Date(sale.created_at).getTime()
+				: Date.now() - index * 1000, // Fallback: recent timestamps
 			priceAtSale: sale.price_at_sale
 		}));
+
+		console.log("📊 Converted sales:", convertedSales);
+		return convertedSales;
 	}
 
-	static async saveSalesHistory(sales: SalesRecord[]): Promise<void> {
+	static async saveSalesHistory(_sales: SalesRecord[]): Promise<void> {
 		// This method is now deprecated - use addSaleRecord instead
 		console.warn(
 			"saveSalesHistory is deprecated. Use addSaleRecord for individual sales."
@@ -95,16 +104,10 @@ export class AdminService {
 		productId: string,
 		salesHistory: SalesRecord[]
 	): ProductStats {
-		// Handle both old localStorage format and new database format
-		const productSales = salesHistory.filter((sale) => {
-			// Check if it's the old format (productId) or new format (product_id)
-			if ("productId" in sale) {
-				return sale.productId === productId;
-			} else if ("product_id" in sale) {
-				return sale.product_id === parseInt(productId);
-			}
-			return false;
-		});
+		// Now all sales are in SalesRecord format (productId: string)
+		const productSales = salesHistory.filter(
+			(sale) => sale.productId === productId
+		);
 
 		const totalSold = productSales.reduce(
 			(sum, sale) => sum + sale.quantity,
@@ -153,15 +156,9 @@ export class AdminService {
 
 		// Calculate market volatility based on price changes
 		const priceChanges = products.map((product) => {
-			const productSales = salesHistory.filter((sale) => {
-				// Handle both old localStorage format and new database format
-				if ("productId" in sale) {
-					return sale.productId === product.id.toString();
-				} else if ("product_id" in sale) {
-					return sale.product_id === product.id;
-				}
-				return false;
-			});
+			const productSales = salesHistory.filter(
+				(sale) => sale.productId === product.id.toString()
+			);
 			if (productSales.length < 2) return 0;
 
 			const prices = productSales.map((sale) => sale.priceAtSale);
@@ -203,19 +200,7 @@ export class AdminService {
 	}
 
 	static getTopProducts(salesHistory: SalesRecord[]): ProductStats[] {
-		const productIds = [
-			...new Set(
-				salesHistory.map((sale) => {
-					// Handle both old localStorage format and new database format
-					if ("productId" in sale) {
-						return sale.productId;
-					} else if ("product_id" in sale) {
-						return sale.product_id.toString();
-					}
-					return "";
-				})
-			)
-		];
+		const productIds = [...new Set(salesHistory.map((sale) => sale.productId))];
 		return productIds
 			.map((id) => this.calculateProductStats(id, salesHistory))
 			.sort((a, b) => b.totalSold - a.totalSold)
@@ -231,7 +216,7 @@ export class AdminService {
 		updatedProducts: Product[];
 		updatedSales: SalesRecord[];
 	}> {
-		const product = products.find((p) => p.id === productId);
+		const product = products.find((p) => p.id === parseInt(productId));
 		if (!product || product.stock <= 0) {
 			return { updatedProducts: products, updatedSales: salesHistory };
 		}
@@ -257,7 +242,7 @@ export class AdminService {
 			return { updatedProducts: products, updatedSales: salesHistory };
 		}
 
-		const updatedProducts = this.updateProductStock(
+		const updatedProducts = await this.updateProductStock(
 			products,
 			productId,
 			product.stock - quantity
@@ -270,6 +255,6 @@ export class AdminService {
 
 	// Reset functionality
 	static resetEconomy(products: Product[]): Product[] {
-		return products.map((p) => ({ ...p, stock: p.initialStock }));
+		return products.map((p) => ({ ...p, stock: p.initialstock }));
 	}
 }

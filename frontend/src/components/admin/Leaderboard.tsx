@@ -14,6 +14,9 @@ export default function Leaderboard({
 	topProducts,
 	products
 }: LeaderboardProps) {
+	// Debug logging
+	console.log("Leaderboard Debug:", { topProducts, products });
+
 	// Get the top 5 products by sales
 	const top5Products = topProducts.slice(0, 5);
 
@@ -33,7 +36,22 @@ export default function Leaderboard({
 				) : (
 					top5Products.map((topProduct, index) => {
 						// Find the product details
-						const product = products.find((p) => p.id === topProduct.productId);
+						console.log("🔍 Matching product:", {
+							topProduct,
+							searchingFor: topProduct.productId
+						});
+						const product = products.find((p) => {
+							console.log(
+								"🔍 Comparing:",
+								p.id,
+								"vs",
+								topProduct.productId,
+								"match:",
+								p.id === parseInt(topProduct.productId)
+							);
+							return p.id === parseInt(topProduct.productId);
+						});
+						console.log("🔍 Found product:", product);
 						if (!product) return null;
 
 						return (

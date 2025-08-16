@@ -62,9 +62,12 @@ export function useAdmin() {
 			const storedProducts = AdminService.getProducts();
 			let storedSales: SalesRecord[] = [];
 			try {
+				console.log("🔄 Attempting to load sales history...");
 				storedSales = await AdminService.getSalesHistory();
+				console.log("📊 Sales history loaded:", storedSales);
+				console.log("📊 Sales count:", storedSales.length);
 			} catch (dbError) {
-				console.warn("Failed to load sales from database:", dbError);
+				console.warn("❌ Failed to load sales from database:", dbError);
 			}
 
 			// Use database products if available, otherwise fallback to stored
@@ -204,13 +207,23 @@ export function useAdmin() {
 
 	const getProductStats = useCallback(
 		(productId: string) => {
-			return AdminService.calculateProductStats(productId, salesHistory);
+			console.log("🔍 getProductStats called with:", productId);
+			console.log("🔍 Available sales history:", salesHistory);
+			const stats = AdminService.calculateProductStats(productId, salesHistory);
+			console.log("🔍 Calculated stats:", stats);
+			return stats;
 		},
 		[salesHistory]
 	);
 
 	const getTopProducts = useCallback(() => {
-		return AdminService.getTopProducts(salesHistory);
+		console.log("getTopProducts Debug:", {
+			salesHistory,
+			length: salesHistory.length
+		});
+		const topProducts = AdminService.getTopProducts(salesHistory);
+		console.log("getTopProducts Result:", topProducts);
+		return topProducts;
 	}, [salesHistory]);
 
 	const clearError = useCallback(() => {

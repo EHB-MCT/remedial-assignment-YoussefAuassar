@@ -14,6 +14,7 @@ export interface DBSalesRecord {
 	quantity: number;
 	revenue: number;
 	price_at_sale: number;
+	created_at?: string; // Supabase automatically adds this
 }
 
 export interface ProductStats {

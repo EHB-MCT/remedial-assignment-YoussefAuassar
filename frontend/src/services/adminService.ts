@@ -14,9 +14,6 @@ import {
 	updateProductPrice as dbUpdateProductPrice,
 	updateProductStock as dbUpdateProductStock
 } from "../database/products";
-// Note: PricingService and AnalyticsService imports will be used when we integrate the new architecture
-// import { PricingService } from "./pricing/PricingService";
-// import { AnalyticsService } from "./analytics/AnalyticsService";
 
 export class AdminService {
 	// Product Management
@@ -69,7 +66,7 @@ export class AdminService {
 		);
 	}
 
-	// Sales Management - NOW USING DATABASE
+	// Sales Management
 	static async getSalesHistory(): Promise<SalesRecord[]> {
 		console.log("🔄 AdminService.getSalesHistory called");
 		const dbSales = await dbGetSalesHistory();

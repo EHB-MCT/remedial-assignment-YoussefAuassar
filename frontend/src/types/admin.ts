@@ -8,6 +8,14 @@ export interface SalesRecord {
 	priceAtSale: number;
 }
 
+// Database-compatible interface for new sales
+export interface DBSalesRecord {
+	product_id: number;
+	quantity: number;
+	revenue: number;
+	price_at_sale: number;
+}
+
 export interface ProductStats {
 	productId: string;
 	totalSold: number;

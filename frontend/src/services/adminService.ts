@@ -2,9 +2,14 @@ import type { Product } from "../database/products";
 import type {
 	SalesRecord,
 	ProductStats,
-	EconomicMetrics
+	EconomicMetrics,
+	DBSalesRecord
 } from "../types/admin";
 import { STORAGE_KEYS, DEFAULT_QUANTITY_RANGE } from "../constants/storage";
+import {
+	getSalesHistory,
+	addSaleRecord as dbAddSaleRecord
+} from "../database/sales";
 
 export class AdminService {
 	// Product Management
@@ -37,21 +42,28 @@ export class AdminService {
 		);
 	}
 
-	// Sales Management
-	static getSalesHistory(): SalesRecord[] {
-		const stored = localStorage.getItem(STORAGE_KEYS.SALES_HISTORY);
-		return stored ? JSON.parse(stored) : [];
+	// Sales Management - NOW USING DATABASE
+	static async getSalesHistory(): Promise<SalesRecord[]> {
+		const dbSales = await getSalesHistory();
+		// Convert DBSalesRecord to SalesRecord for backward compatibility
+		return dbSales.map((sale) => ({
+			productId: sale.product_id.toString(),
+			quantity: sale.quantity,
+			revenue: sale.revenue,
+			timestamp: Date.now(), // Use current timestamp for old format
+			priceAtSale: sale.price_at_sale
+		}));
 	}
 
-	static saveSalesHistory(sales: SalesRecord[]): void {
-		localStorage.setItem(STORAGE_KEYS.SALES_HISTORY, JSON.stringify(sales));
+	static async saveSalesHistory(sales: SalesRecord[]): Promise<void> {
+		// This method is now deprecated - use addSaleRecord instead
+		console.warn(
+			"saveSalesHistory is deprecated. Use addSaleRecord for individual sales."
+		);
 	}
 
-	static addSaleRecord(
-		sales: SalesRecord[],
-		newSale: SalesRecord
-	): SalesRecord[] {
-		return [...sales, newSale];
+	static async addSaleRecord(newSale: DBSalesRecord): Promise<boolean> {
+		return await dbAddSaleRecord(newSale);
 	}
 
 	// Analytics
@@ -59,9 +71,17 @@ export class AdminService {
 		productId: string,
 		salesHistory: SalesRecord[]
 	): ProductStats {
-		const productSales = salesHistory.filter(
-			(sale) => sale.productId === productId
-		);
+		// Handle both old localStorage format and new database format
+		const productSales = salesHistory.filter((sale) => {
+			// Check if it's the old format (productId) or new format (product_id)
+			if ("productId" in sale) {
+				return sale.productId === productId;
+			} else if ("product_id" in sale) {
+				return sale.product_id === parseInt(productId);
+			}
+			return false;
+		});
+
 		const totalSold = productSales.reduce(
 			(sum, sale) => sum + sale.quantity,
 			0
@@ -109,9 +129,15 @@ export class AdminService {
 
 		// Calculate market volatility based on price changes
 		const priceChanges = products.map((product) => {
-			const productSales = salesHistory.filter(
-				(sale) => sale.productId === product.id
-			);
+			const productSales = salesHistory.filter((sale) => {
+				// Handle both old localStorage format and new database format
+				if ("productId" in sale) {
+					return sale.productId === product.id.toString();
+				} else if ("product_id" in sale) {
+					return sale.product_id === product.id;
+				}
+				return false;
+			});
 			if (productSales.length < 2) return 0;
 
 			const prices = productSales.map((sale) => sale.priceAtSale);
@@ -153,7 +179,19 @@ export class AdminService {
 	}
 
 	static getTopProducts(salesHistory: SalesRecord[]): ProductStats[] {
-		const productIds = [...new Set(salesHistory.map((sale) => sale.productId))];
+		const productIds = [
+			...new Set(
+				salesHistory.map((sale) => {
+					// Handle both old localStorage format and new database format
+					if ("productId" in sale) {
+						return sale.productId;
+					} else if ("product_id" in sale) {
+						return sale.product_id.toString();
+					}
+					return "";
+				})
+			)
+		];
 		return productIds
 			.map((id) => this.calculateProductStats(id, salesHistory))
 			.sort((a, b) => b.totalSold - a.totalSold)
@@ -161,14 +199,14 @@ export class AdminService {
 	}
 
 	// Economy Simulation
-	static simulatePurchase(
+	static async simulatePurchase(
 		productId: string,
 		products: Product[],
 		salesHistory: SalesRecord[]
-	): {
+	): Promise<{
 		updatedProducts: Product[];
 		updatedSales: SalesRecord[];
-	} {
+	}> {
 		const product = products.find((p) => p.id === productId);
 		if (!product || product.stock <= 0) {
 			return { updatedProducts: products, updatedSales: salesHistory };
@@ -179,21 +217,30 @@ export class AdminService {
 				Math.random() *
 					(DEFAULT_QUANTITY_RANGE.max - DEFAULT_QUANTITY_RANGE.min + 1)
 			) + DEFAULT_QUANTITY_RANGE.min;
-		const newSale: SalesRecord = {
-			productId,
+
+		// Create sale record for database
+		const newSale: DBSalesRecord = {
+			product_id: parseInt(productId),
 			quantity,
 			revenue: quantity * product.price,
-			timestamp: Date.now(),
-			priceAtSale: product.price
+			price_at_sale: product.price
 		};
+
+		// Save to database
+		const success = await this.addSaleRecord(newSale);
+		if (!success) {
+			console.error("Failed to save sale to database");
+			return { updatedProducts: products, updatedSales: salesHistory };
+		}
 
 		const updatedProducts = this.updateProductStock(
 			products,
 			productId,
 			product.stock - quantity
 		);
-		const updatedSales = this.addSaleRecord(salesHistory, newSale);
 
+		// Return updated products and current sales history
+		const updatedSales = await this.getSalesHistory();
 		return { updatedProducts, updatedSales };
 	}
 

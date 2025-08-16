@@ -60,7 +60,12 @@ export function useAdmin() {
 			}
 
 			const storedProducts = AdminService.getProducts();
-			const storedSales = AdminService.getSalesHistory();
+			let storedSales: SalesRecord[] = [];
+			try {
+				storedSales = await AdminService.getSalesHistory();
+			} catch (dbError) {
+				console.warn("Failed to load sales from database:", dbError);
+			}
 
 			// Use database products if available, otherwise fallback to stored
 			if (dbProducts.length > 0) {
@@ -142,19 +147,19 @@ export function useAdmin() {
 	);
 
 	const simulatePurchase = useCallback(
-		(productId: string) => {
+		async (productId: string) => {
 			try {
 				setError(null);
-				const { updatedProducts, updatedSales } = AdminService.simulatePurchase(
-					productId,
-					products,
-					salesHistory
-				);
+				const { updatedProducts, updatedSales } =
+					await AdminService.simulatePurchase(
+						productId,
+						products,
+						salesHistory
+					);
 
 				setProducts(updatedProducts);
 				setSalesHistory(updatedSales);
 				AdminService.saveProducts(updatedProducts);
-				AdminService.saveSalesHistory(updatedSales);
 			} catch (err) {
 				const errorMessage =
 					err instanceof Error ? err.message : "Failed to simulate purchase";

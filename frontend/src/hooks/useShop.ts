@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { fetchProducts, type Product } from "../lib/supabase";
 import type { CartItem } from "../types/cart";
+import { addSaleRecord } from "../database/sales";
+import type { DBSalesRecord } from "../types/admin";
 
 export function useShop() {
 	const [products, setProducts] = useState<Product[]>([]);
@@ -95,46 +97,73 @@ export function useShop() {
 
 	const cartTotal = cart.reduce((acc, c) => acc + c.qty * c.priceAtAdd, 0);
 
-	const checkout = () => {
+	const checkout = async () => {
 		if (cartTotal > balance) {
 			alert("Onvoldoende saldo");
 			return;
 		}
 
-		// Record sales for admin analytics
-		cart.forEach((item) => {
-			const saleRecord = {
-				productId: item.productId,
-				quantity: item.qty,
-				revenue: item.qty * item.priceAtAdd,
-				timestamp: Date.now(),
-				priceAtSale: item.priceAtAdd
-			};
+		try {
+			console.log("Starting checkout process...");
+			console.log("Cart items:", cart);
 
-			// Add to existing sales history
-			const existingSales = JSON.parse(
-				localStorage.getItem("salesHistory") || "[]"
-			);
-			existingSales.push(saleRecord);
-			localStorage.setItem("salesHistory", JSON.stringify(existingSales));
+			// Record sales for admin analytics - NOW USING DATABASE
+			for (const item of cart) {
+				const saleRecord: DBSalesRecord = {
+					product_id: item.productId,
+					quantity: item.qty,
+					revenue: item.qty * item.priceAtAdd,
+					price_at_sale: item.priceAtAdd
+				};
 
-			// Update admin products storage
-			const adminProducts = JSON.parse(
-				localStorage.getItem("adminProducts") || "[]"
-			);
-			if (adminProducts.length > 0) {
-				const updatedAdminProducts = adminProducts.map((p: Product) =>
-					p.id === item.productId ? { ...p, stock: p.stock - item.qty } : p
-				);
-				localStorage.setItem(
-					"adminProducts",
-					JSON.stringify(updatedAdminProducts)
-				);
+				console.log("Saving sale record:", saleRecord);
+
+				try {
+					// Save to database instead of localStorage
+					const success = await addSaleRecord(saleRecord);
+					if (!success) {
+						console.error("Failed to save sale record to database");
+					} else {
+						console.log("Sale record saved successfully to database");
+					}
+				} catch (dbError) {
+					console.error("Database error when saving sale:", dbError);
+					throw dbError; // Re-throw to trigger the catch block
+				}
 			}
-		});
 
-		setBalance((b) => Number((b - cartTotal).toFixed(2)));
-		setCart([]);
+			// Update admin products storage (keep this for now)
+			const adminProductsStr = localStorage.getItem("adminProducts");
+			if (adminProductsStr) {
+				try {
+					const adminProducts = JSON.parse(adminProductsStr);
+					if (adminProducts.length > 0) {
+						for (const item of cart) {
+							const updatedAdminProducts = adminProducts.map((p: Product) =>
+								p.id === item.productId
+									? { ...p, stock: p.stock - item.qty }
+									: p
+							);
+							localStorage.setItem(
+								"adminProducts",
+								JSON.stringify(updatedAdminProducts)
+							);
+						}
+					}
+				} catch (parseError) {
+					console.warn(
+						"Failed to parse adminProducts from localStorage:",
+						parseError
+					);
+				}
+			}
+
+			setBalance((b) => Number((b - cartTotal).toFixed(2)));
+			setCart([]);
+		} catch (error) {
+			console.error("Checkout failed:", error);
+			alert("Checkout failed. Please try again.");
+		}
 	};
 
 	return {

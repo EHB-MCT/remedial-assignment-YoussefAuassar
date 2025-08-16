@@ -103,7 +103,7 @@ export function useAdmin() {
 	}, []);
 
 	const updateProductPrice = useCallback(
-		(productId: string, newPrice: number) => {
+		async (productId: string, newPrice: number) => {
 			if (!validatePrice(newPrice)) {
 				const errorMessage = `Price must be between €${ADMIN_CONSTANTS.MIN_PRICE} and €${ADMIN_CONSTANTS.MAX_PRICE}`;
 				setError(errorMessage);
@@ -111,21 +111,26 @@ export function useAdmin() {
 			}
 
 			setError(null);
-			setProducts((prevProducts) => {
-				const updatedProducts = AdminService.updateProductPrice(
-					prevProducts,
+			try {
+				const updatedProducts = await AdminService.updateProductPrice(
+					products,
 					productId,
 					newPrice
 				);
-				AdminService.saveProducts(updatedProducts);
-				return updatedProducts;
-			});
+				setProducts(updatedProducts);
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error
+						? error.message
+						: "Failed to update product price";
+				setError(errorMessage);
+			}
 		},
-		[validatePrice]
+		[validatePrice, products]
 	);
 
 	const updateProductStock = useCallback(
-		(productId: string, newStock: number) => {
+		async (productId: string, newStock: number) => {
 			if (!validateStock(newStock)) {
 				const errorMessage = `Stock must be between ${ADMIN_CONSTANTS.MIN_STOCK} and ${ADMIN_CONSTANTS.MAX_STOCK}`;
 				setError(errorMessage);
@@ -133,17 +138,22 @@ export function useAdmin() {
 			}
 
 			setError(null);
-			setProducts((prevProducts) => {
-				const updatedProducts = AdminService.updateProductStock(
-					prevProducts,
+			try {
+				const updatedProducts = await AdminService.updateProductStock(
+					products,
 					productId,
 					newStock
 				);
-				AdminService.saveProducts(updatedProducts);
-				return updatedProducts;
-			});
+				setProducts(updatedProducts);
+			} catch (error) {
+				const errorMessage =
+					error instanceof Error
+						? error.message
+						: "Failed to update product stock";
+				setError(errorMessage);
+			}
 		},
-		[validateStock]
+		[validateStock, products]
 	);
 
 	const simulatePurchase = useCallback(

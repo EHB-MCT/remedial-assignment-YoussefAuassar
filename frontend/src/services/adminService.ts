@@ -10,6 +10,10 @@ import {
 	getSalesHistory,
 	addSaleRecord as dbAddSaleRecord
 } from "../database/sales";
+import {
+	updateProductPrice as dbUpdateProductPrice,
+	updateProductStock as dbUpdateProductStock
+} from "../database/products";
 
 export class AdminService {
 	// Product Management
@@ -22,23 +26,43 @@ export class AdminService {
 		localStorage.setItem(STORAGE_KEYS.ADMIN_PRODUCTS, JSON.stringify(products));
 	}
 
-	static updateProductPrice(
+	static async updateProductPrice(
 		products: Product[],
 		productId: string,
 		newPrice: number
-	): Product[] {
+	): Promise<Product[]> {
+		// Update in database
+		const success = await dbUpdateProductPrice(parseInt(productId), newPrice);
+		if (!success) {
+			console.error("Failed to update product price in database");
+			return products; // Return unchanged if database update fails
+		}
+
+		// Update local state
 		return products.map((product) =>
-			product.id === productId ? { ...product, price: newPrice } : product
+			product.id === parseInt(productId)
+				? { ...product, price: newPrice }
+				: product
 		);
 	}
 
-	static updateProductStock(
+	static async updateProductStock(
 		products: Product[],
 		productId: string,
 		newStock: number
-	): Product[] {
+	): Promise<Product[]> {
+		// Update in database
+		const success = await dbUpdateProductStock(parseInt(productId), newStock);
+		if (!success) {
+			console.error("Failed to update product stock in database");
+			return products; // Return unchanged if database update fails
+		}
+
+		// Update local state
 		return products.map((product) =>
-			product.id === productId ? { ...product, stock: newStock } : product
+			product.id === parseInt(productId)
+				? { ...product, stock: newStock }
+				: product
 		);
 	}
 

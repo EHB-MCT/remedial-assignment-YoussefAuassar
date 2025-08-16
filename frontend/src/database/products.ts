@@ -47,5 +47,38 @@ export async function updateProduct(
 	return true;
 }
 
-// Mock data is now commented out in supabase.ts
-// No fallback data available - app will crash if database fails
+// Update product price in database
+export async function updateProductPrice(
+	productId: number,
+	newPrice: number
+): Promise<boolean> {
+	const { error } = await supabase
+		.from("products")
+		.update({ price: newPrice })
+		.eq("id", productId);
+
+	if (error) {
+		console.error("Error updating product price:", error);
+		return false;
+	}
+
+	return true;
+}
+
+// Update product stock in database
+export async function updateProductStock(
+	productId: number,
+	newStock: number
+): Promise<boolean> {
+	const { error } = await supabase
+		.from("products")
+		.update({ stock: newStock })
+		.eq("id", productId);
+
+	if (error) {
+		console.error("Error updating product stock:", error);
+		return false;
+	}
+
+	return true;
+}

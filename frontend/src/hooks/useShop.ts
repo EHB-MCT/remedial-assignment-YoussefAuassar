@@ -3,6 +3,7 @@ import { fetchProducts, type Product } from "../lib/supabase";
 import type { CartItem } from "../types/cart";
 import { addSaleRecord } from "../database/sales";
 import type { DBSalesRecord } from "../types/admin";
+import { AdminService } from "../services/adminService";
 
 export function useShop() {
 	const [products, setProducts] = useState<Product[]>([]);
@@ -156,6 +157,30 @@ export function useShop() {
 						parseError
 					);
 				}
+			}
+
+			// 🚀 APPLY DYNAMIC PRICING AFTER PURCHASE
+			console.log("🔄 Applying dynamic pricing after purchase...");
+			try {
+				const salesHistory = await AdminService.getSalesHistory();
+				let updatedProducts = [...products];
+
+				// Apply dynamic pricing to all purchased products
+				for (const item of cart) {
+					console.log(`🎯 Applying pricing to product ${item.productId}`);
+					updatedProducts = await AdminService.applyDynamicPricing(
+						item.productId.toString(),
+						updatedProducts,
+						salesHistory
+					);
+				}
+
+				// Update the products state with new prices
+				setProducts(updatedProducts);
+				console.log("✅ Dynamic pricing applied successfully!");
+			} catch (pricingError) {
+				console.error("❌ Error applying dynamic pricing:", pricingError);
+				// Don't fail checkout for pricing errors
 			}
 
 			setBalance((b) => Number((b - cartTotal).toFixed(2)));

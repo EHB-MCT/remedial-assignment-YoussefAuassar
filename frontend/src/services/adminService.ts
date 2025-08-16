@@ -14,6 +14,9 @@ import {
 	updateProductPrice as dbUpdateProductPrice,
 	updateProductStock as dbUpdateProductStock
 } from "../database/products";
+// Note: PricingService and AnalyticsService imports will be used when we integrate the new architecture
+// import { PricingService } from "./pricing/PricingService";
+// import { AnalyticsService } from "./analytics/AnalyticsService";
 
 export class AdminService {
 	// Product Management
@@ -88,7 +91,7 @@ export class AdminService {
 		return convertedSales;
 	}
 
-	static async saveSalesHistory(_sales: SalesRecord[]): Promise<void> {
+	static async saveSalesHistory(): Promise<void> {
 		// This method is now deprecated - use addSaleRecord instead
 		console.warn(
 			"saveSalesHistory is deprecated. Use addSaleRecord for individual sales."
@@ -242,10 +245,17 @@ export class AdminService {
 			return { updatedProducts: products, updatedSales: salesHistory };
 		}
 
-		const updatedProducts = await this.updateProductStock(
+		const stockUpdatedProducts = await this.updateProductStock(
 			products,
 			productId,
 			product.stock - quantity
+		);
+
+		// Apply dynamic pricing after the sale
+		const updatedProducts = await this.applyDynamicPricing(
+			productId,
+			stockUpdatedProducts,
+			salesHistory
 		);
 
 		// Return updated products and current sales history
@@ -256,5 +266,93 @@ export class AdminService {
 	// Reset functionality
 	static resetEconomy(products: Product[]): Product[] {
 		return products.map((p) => ({ ...p, stock: p.initialstock }));
+	}
+
+	// Dynamic Pricing System
+	static calculateDynamicPrice(
+		product: Product,
+		salesHistory: SalesRecord[],
+		timeWindowHours: number = 24
+	): number {
+		const now = Date.now();
+		const timeWindow = timeWindowHours * 60 * 60 * 1000; // Convert hours to milliseconds
+
+		// Get recent sales for this product
+		const recentSales = salesHistory.filter(
+			(sale) =>
+				sale.productId === product.id.toString() &&
+				now - sale.timestamp <= timeWindow
+		);
+
+		const totalRecentSales = recentSales.reduce(
+			(sum, sale) => sum + sale.quantity,
+			0
+		);
+		const basePrice = product.price;
+
+		// Dynamic pricing factors
+		const demandFactor = this.calculateDemandFactor(totalRecentSales);
+		const stockFactor = this.calculateStockFactor(
+			product.stock,
+			product.initialstock
+		);
+
+		// Calculate new price with realistic min/max bounds
+		const newPrice = basePrice * demandFactor * stockFactor;
+		const minPrice = basePrice * 0.75; // Never go below 75% of original price
+		const maxPrice = basePrice * 1.4; // Never go above 140% of original price
+
+		return Math.max(minPrice, Math.min(maxPrice, newPrice));
+	}
+
+	static calculateDemandFactor(recentSales: number): number {
+		// Realistic demand-based pricing
+		if (recentSales >= 8) return 1.15; // +15% for very high demand
+		if (recentSales >= 5) return 1.1; // +10% for high demand
+		if (recentSales >= 3) return 1.05; // +5% for moderate demand
+		if (recentSales >= 1) return 1.0; // Normal price for some demand
+		return 0.95; // -5% for no recent sales
+	}
+
+	static calculateStockFactor(
+		currentStock: number,
+		initialStock: number
+	): number {
+		const stockRatio = currentStock / initialStock;
+
+		// Realistic stock-based pricing (scarcity effect)
+		if (stockRatio <= 0.1) return 1.15; // +15% for very low stock (≤10%)
+		if (stockRatio <= 0.2) return 1.08; // +8% for low stock (≤20%)
+		if (stockRatio <= 0.5) return 1.02; // +2% for medium-low stock (≤50%)
+		if (stockRatio >= 0.9) return 0.98; // -2% for high stock (≥90%)
+		return 1.0; // Normal price for balanced stock
+	}
+
+	static async applyDynamicPricing(
+		productId: string,
+		products: Product[],
+		salesHistory: SalesRecord[]
+	): Promise<Product[]> {
+		const product = products.find((p) => p.id === parseInt(productId));
+		if (!product) return products;
+
+		const newPrice = this.calculateDynamicPrice(product, salesHistory);
+
+		// Only update if price changed significantly (avoid tiny fluctuations)
+		const priceChange = Math.abs(newPrice - product.price);
+		if (priceChange >= 0.02) {
+			// At least 2 cents difference
+			console.log(
+				`💰 Dynamic pricing: ${product.name} €${product.price.toFixed(
+					2
+				)} → €${newPrice.toFixed(2)} (${(
+					((newPrice - product.price) / product.price) *
+					100
+				).toFixed(1)}%)`
+			);
+			return await this.updateProductPrice(products, productId, newPrice);
+		}
+
+		return products;
 	}
 }

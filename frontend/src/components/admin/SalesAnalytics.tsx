@@ -1,4 +1,3 @@
-import React from "react";
 import type { Product } from "../../database/products";
 import type { ProductStats } from "../../types/admin";
 

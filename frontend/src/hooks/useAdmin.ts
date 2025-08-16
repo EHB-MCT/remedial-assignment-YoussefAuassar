@@ -22,7 +22,7 @@ export function useAdmin() {
 	// Load data from storage on mount
 	useEffect(() => {
 		loadDataFromStorage();
-	}, []);
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Listen for storage changes to update in real-time
 	useEffect(() => {
@@ -32,7 +32,7 @@ export function useAdmin() {
 
 		window.addEventListener("storage", handleStorageChange);
 		return () => window.removeEventListener("storage", handleStorageChange);
-	}, []);
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Update economic metrics when data changes
 	useEffect(() => {
@@ -194,7 +194,7 @@ export function useAdmin() {
 				setProducts((prevProducts) => {
 					const resetProducts = AdminService.resetEconomy(prevProducts);
 					AdminService.saveProducts(resetProducts);
-					AdminService.saveSalesHistory([]);
+					AdminService.saveSalesHistory();
 					return resetProducts;
 				});
 			} catch (err) {

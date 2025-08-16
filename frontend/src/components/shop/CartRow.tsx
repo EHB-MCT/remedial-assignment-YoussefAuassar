@@ -12,7 +12,7 @@ interface CartRowProps {
 	/** Array of all available products for lookup */
 	products: Product[];
 	/** Function to remove an item from the cart */
-	removeFromCart: (productId: string, priceAtAdd: number) => void;
+	removeFromCart: (productId: number, priceAtAdd: number) => void;
 }
 
 /**

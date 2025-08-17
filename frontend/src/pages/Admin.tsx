@@ -1,4 +1,3 @@
-import React from "react";
 import EconomicOverview from "../components/admin/EconomicOverview";
 import ProductManagement from "../components/admin/ProductManagement";
 import Leaderboard from "../components/admin/Leaderboard";
@@ -20,7 +19,6 @@ export default function Admin() {
 			setSelectedProduct,
 			updateProductPrice,
 			updateProductStock,
-			simulatePurchase,
 			resetEconomy,
 			getProductStats,
 			getTopProducts,
@@ -87,7 +85,6 @@ export default function Admin() {
 							products={products}
 							onUpdatePrice={updateProductPrice}
 							onUpdateStock={updateProductStock}
-							onSimulatePurchase={simulatePurchase}
 							onResetEconomy={resetEconomy}
 						/>
 					</div>

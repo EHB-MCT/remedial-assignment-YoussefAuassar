@@ -6,7 +6,6 @@ interface ProductManagementProps {
 	products: Product[];
 	onUpdatePrice: (productId: string, newPrice: number) => void;
 	onUpdateStock: (productId: string, newStock: number) => void;
-	onSimulatePurchase: (productId: string) => void;
 	onResetEconomy: () => void;
 }
 
@@ -14,7 +13,6 @@ export default function ProductManagement({
 	products,
 	onUpdatePrice,
 	onUpdateStock,
-	onSimulatePurchase,
 	onResetEconomy
 }: ProductManagementProps) {
 	// Track which product is currently being edited
@@ -65,7 +63,6 @@ export default function ProductManagement({
 								onEditCancel={() => setEditingProduct(null)}
 								onUpdatePrice={onUpdatePrice}
 								onUpdateStock={onUpdateStock}
-								onSimulatePurchase={onSimulatePurchase}
 							/>
 						))}
 					</tbody>
@@ -83,7 +80,6 @@ interface ProductRowProps {
 	onEditCancel: () => void;
 	onUpdatePrice: (productId: string, newPrice: number) => void;
 	onUpdateStock: (productId: string, newStock: number) => void;
-	onSimulatePurchase: (productId: string) => void;
 }
 
 function ProductRow({
@@ -92,8 +88,7 @@ function ProductRow({
 	onEditStart,
 	onEditCancel,
 	onUpdatePrice,
-	onUpdateStock,
-	onSimulatePurchase
+	onUpdateStock
 }: ProductRowProps) {
 	// Temporary values for editing
 	const [tempPrice, setTempPrice] = useState(product.price);
@@ -289,13 +284,12 @@ function ProductRow({
 					</div>
 				) : (
 					<div className="flex items-center gap-2">
-						{/* Simulate purchase button */}
+						{/* Edit button */}
 						<button
-							onClick={() => onSimulatePurchase(product.id)}
-							disabled={product.stock <= 0}
-							className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+							onClick={onEditStart}
+							className="px-3 py-1 bg-slate-600 text-white rounded text-sm hover:bg-slate-700"
 						>
-							Simulate Sale
+							Edit
 						</button>
 					</div>
 				)}

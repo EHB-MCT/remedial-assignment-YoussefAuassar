@@ -24,15 +24,7 @@ export function useAdmin() {
 		loadDataFromStorage();
 	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-	// Listen for storage changes to update in real-time
-	useEffect(() => {
-		const handleStorageChange = () => {
-			loadDataFromStorage();
-		};
-
-		window.addEventListener("storage", handleStorageChange);
-		return () => window.removeEventListener("storage", handleStorageChange);
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
+	// Note: Removed localStorage sync since we're now using database persistence
 
 	// Update economic metrics when data changes
 	useEffect(() => {
@@ -59,7 +51,17 @@ export function useAdmin() {
 				);
 			}
 
-			const storedProducts = AdminService.getProducts();
+			// Load products from AdminService (which now uses database)
+			let adminProducts: Product[] = [];
+			try {
+				adminProducts = await AdminService.getProducts();
+			} catch (adminError) {
+				console.warn(
+					"❌ Failed to load products from AdminService:",
+					adminError
+				);
+			}
+
 			let storedSales: SalesRecord[] = [];
 			try {
 				console.log("🔄 Attempting to load sales history...");
@@ -70,13 +72,13 @@ export function useAdmin() {
 				console.warn("❌ Failed to load sales from database:", dbError);
 			}
 
-			// Use database products if available, otherwise fallback to stored
+			// Use database products (prioritize dbProducts, fallback to adminProducts)
 			if (dbProducts.length > 0) {
 				setProducts(dbProducts);
-			} else if (storedProducts.length > 0) {
-				setProducts(storedProducts);
+			} else if (adminProducts.length > 0) {
+				setProducts(adminProducts);
 			} else {
-				// No fallback data available
+				// No products available
 				setProducts([]);
 			}
 
@@ -159,28 +161,7 @@ export function useAdmin() {
 		[validateStock, products]
 	);
 
-	const simulatePurchase = useCallback(
-		async (productId: string) => {
-			try {
-				setError(null);
-				const { updatedProducts, updatedSales } =
-					await AdminService.simulatePurchase(
-						productId,
-						products,
-						salesHistory
-					);
-
-				setProducts(updatedProducts);
-				setSalesHistory(updatedSales);
-				AdminService.saveProducts(updatedProducts);
-			} catch (err) {
-				const errorMessage =
-					err instanceof Error ? err.message : "Failed to simulate purchase";
-				setError(errorMessage);
-			}
-		},
-		[products, salesHistory]
-	);
+	// Note: simulatePurchase removed - not needed for core economic simulation
 
 	const resetEconomy = useCallback(() => {
 		if (
@@ -193,7 +174,7 @@ export function useAdmin() {
 				setSalesHistory([]);
 				setProducts((prevProducts) => {
 					const resetProducts = AdminService.resetEconomy(prevProducts);
-					AdminService.saveProducts(resetProducts);
+					AdminService.saveProducts();
 					AdminService.saveSalesHistory();
 					return resetProducts;
 				});
@@ -243,7 +224,6 @@ export function useAdmin() {
 		setSelectedProduct,
 		updateProductPrice,
 		updateProductStock,
-		simulatePurchase,
 		resetEconomy,
 		clearError,
 

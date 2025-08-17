@@ -16,23 +16,17 @@ export function useShop() {
 				setLoading(true);
 				const dbProducts = await fetchProducts();
 
-				// Prioritize database data, fallback to admin storage
+				// Use database products only
 				if (dbProducts && dbProducts.length > 0) {
 					console.log("✅ Using database products:", dbProducts);
 					setProducts(dbProducts);
 				} else {
-					const adminProducts = localStorage.getItem("adminProducts");
-					if (adminProducts) {
-						console.log("📱 Using localStorage products");
-						setProducts(JSON.parse(adminProducts));
-					} else {
-						console.log("🔄 No fallback data available");
-						setProducts([]); // Empty array - no fallback
-					}
+					console.log("🔄 No products available from database");
+					setProducts([]); // Empty array - no products available
 				}
 			} catch (error) {
 				console.error("Error loading products:", error);
-				// No fallback data available if database fails
+				// No products available if database fails
 				setProducts([]);
 			} finally {
 				setLoading(false);
@@ -44,18 +38,7 @@ export function useShop() {
 	const [balance, setBalance] = useState(50);
 	const [cart, setCart] = useState<CartItem[]>([]);
 
-	// Sync with admin changes
-	useEffect(() => {
-		const handleStorageChange = () => {
-			const adminProducts = localStorage.getItem("adminProducts");
-			if (adminProducts) {
-				setProducts(JSON.parse(adminProducts));
-			}
-		};
-
-		window.addEventListener("storage", handleStorageChange);
-		return () => window.removeEventListener("storage", handleStorageChange);
-	}, []);
+	// Note: Removed localStorage sync since we're now using database persistence
 
 	const currentPrice = (pid: number) =>
 		products.find((p) => p.id === pid)?.price ?? 0;
@@ -133,29 +116,23 @@ export function useShop() {
 				}
 			}
 
-			// Update admin products storage (keep this for now)
-			const adminProductsStr = localStorage.getItem("adminProducts");
-			if (adminProductsStr) {
+			// Update product stock in database
+			for (const item of cart) {
 				try {
-					const adminProducts = JSON.parse(adminProductsStr);
-					if (adminProducts.length > 0) {
-						for (const item of cart) {
-							const updatedAdminProducts = adminProducts.map((p: Product) =>
-								p.id === item.productId
-									? { ...p, stock: p.stock - item.qty }
-									: p
-							);
-							localStorage.setItem(
-								"adminProducts",
-								JSON.stringify(updatedAdminProducts)
-							);
-						}
-					}
-				} catch (parseError) {
-					console.warn(
-						"Failed to parse adminProducts from localStorage:",
-						parseError
+					console.log(`Updating stock for product ${item.productId}`);
+					const success = await AdminService.updateProductStock(
+						products,
+						item.productId.toString(),
+						(products.find((p) => p.id === item.productId)?.stock || 0) -
+							item.qty
 					);
+					if (!success) {
+						console.error(
+							`Failed to update stock for product ${item.productId}`
+						);
+					}
+				} catch (stockError) {
+					console.error("Error updating product stock:", stockError);
 				}
 			}
 
@@ -181,6 +158,20 @@ export function useShop() {
 			} catch (pricingError) {
 				console.error("❌ Error applying dynamic pricing:", pricingError);
 				// Don't fail checkout for pricing errors
+			}
+
+			// Refresh products from database to ensure data consistency
+			try {
+				const refreshedProducts = await fetchProducts();
+				if (refreshedProducts && refreshedProducts.length > 0) {
+					setProducts(refreshedProducts);
+					console.log("🔄 Products refreshed from database");
+				}
+			} catch (refreshError) {
+				console.error(
+					"Failed to refresh products after checkout:",
+					refreshError
+				);
 			}
 
 			setBalance((b) => Number((b - cartTotal).toFixed(2)));

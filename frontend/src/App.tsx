@@ -6,16 +6,10 @@ import "./App.css";
 
 function App() {
 	const [tab, setTab] = useState<"shop" | "admin">("shop");
-	const [simulate, setSimulate] = useState(false);
 
 	return (
 		<>
-			<Navigation
-				tab={tab}
-				setTab={setTab}
-				simulate={simulate}
-				setSimulate={setSimulate}
-			/>
+			<Navigation tab={tab} setTab={setTab} />
 			<main>
 				{tab === "shop" ? (
 					<div className="max-w-6xl mx-auto px-4 py-8">

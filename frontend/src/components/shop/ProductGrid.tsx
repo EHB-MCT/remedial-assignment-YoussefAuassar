@@ -1,5 +1,4 @@
 import type { Product } from "../../lib/supabase";
-import { niceCurrency } from "../../utils/currency";
 import ProductCard from "./ProductCard";
 
 interface ProductGridProps {

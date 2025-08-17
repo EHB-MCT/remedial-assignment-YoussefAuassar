@@ -1,7 +1,4 @@
-export const STORAGE_KEYS = {
-	ADMIN_PRODUCTS: "adminProducts",
-	SALES_HISTORY: "salesHistory"
-} as const;
+// Note: STORAGE_KEYS removed - now using database persistence instead of localStorage
 
 export const DEFAULT_BALANCE = 50;
 export const DEFAULT_QUANTITY_RANGE = { min: 1, max: 3 };

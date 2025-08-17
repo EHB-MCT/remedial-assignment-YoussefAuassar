@@ -3,16 +3,9 @@ import { Beer, Settings } from "lucide-react";
 type NavigationProps = {
 	tab: "shop" | "admin";
 	setTab: (t: "shop" | "admin") => void;
-	simulate: boolean;
-	setSimulate: (s: boolean) => void;
 };
 
-export default function Navigation({
-	tab,
-	setTab,
-	simulate,
-	setSimulate
-}: NavigationProps) {
+export default function Navigation({ tab, setTab }: NavigationProps) {
 	return (
 		<header className="sticky top-0 z-10 backdrop-blur bg-white/70 border-b border-slate-200">
 			<div className="max-w-6xl mx-auto px-1 py-4 flex items-center justify-between">
@@ -40,18 +33,6 @@ export default function Navigation({
 					>
 						<Settings className="w-5 h-5" /> Admin
 					</button>
-					<div className="ml-3 flex items-center gap-3 text-base">
-						<span className="hidden sm:inline">Simulatie</span>
-						<button
-							onClick={() => setSimulate(!simulate)}
-							className={`px-3 py-2 rounded-lg ${
-								simulate ? "bg-green-600 text-white" : "bg-slate-300"
-							}`}
-							title="Zet random kopers aan/uit"
-						>
-							{simulate ? "Aan" : "Uit"}
-						</button>
-					</div>
 				</div>
 			</div>
 		</header>

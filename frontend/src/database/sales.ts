@@ -1,7 +1,16 @@
+/**
+ * Database operations for sales transaction management.
+ * Handles all CRUD operations for the sales_history table in Supabase.
+ */
+
 import { supabase } from "../lib/supabase";
 import type { DBSalesRecord } from "../types/admin";
 
-// Get all sales history
+/**
+ * Retrieves all sales history from the database.
+ *
+ * @returns {Promise<DBSalesRecord[]>} Array of all sales records, ordered by creation date (newest first).
+ */
 export async function getSalesHistory(): Promise<DBSalesRecord[]> {
 	const { data, error } = await supabase
 		.from("sales_history")
@@ -16,7 +25,12 @@ export async function getSalesHistory(): Promise<DBSalesRecord[]> {
 	return data || [];
 }
 
-// Add a new sale record
+/**
+ * Adds a new sale record to the database.
+ *
+ * @param {DBSalesRecord} sale - The sale record to insert.
+ * @returns {Promise<boolean>} True if insertion successful, false otherwise.
+ */
 export async function addSaleRecord(sale: DBSalesRecord): Promise<boolean> {
 	const { error } = await supabase.from("sales_history").insert([sale]);
 
@@ -28,7 +42,12 @@ export async function addSaleRecord(sale: DBSalesRecord): Promise<boolean> {
 	return true;
 }
 
-// Get sales for a specific product
+/**
+ * Retrieves sales history for a specific product.
+ *
+ * @param {number} productId - The ID of the product to get sales for.
+ * @returns {Promise<DBSalesRecord[]>} Array of sales records for the product, ordered by creation date.
+ */
 export async function getProductSales(
 	productId: number
 ): Promise<DBSalesRecord[]> {

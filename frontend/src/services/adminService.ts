@@ -5,25 +5,33 @@ import type {
 	EconomicMetrics,
 	DBSalesRecord
 } from "../types/admin";
-import { STORAGE_KEYS, DEFAULT_QUANTITY_RANGE } from "../constants/storage";
+import { DEFAULT_QUANTITY_RANGE } from "../constants/storage";
 import {
 	getSalesHistory as dbGetSalesHistory,
 	addSaleRecord as dbAddSaleRecord
 } from "../database/sales";
 import {
+	getProducts as dbGetProducts,
 	updateProductPrice as dbUpdateProductPrice,
 	updateProductStock as dbUpdateProductStock
 } from "../database/products";
 
 export class AdminService {
-	// Product Management
-	static getProducts(): Product[] {
-		const stored = localStorage.getItem(STORAGE_KEYS.ADMIN_PRODUCTS);
-		return stored ? JSON.parse(stored) : [];
+	// Product Management - Now using database
+	static async getProducts(): Promise<Product[]> {
+		try {
+			return await dbGetProducts();
+		} catch (error) {
+			console.error("Failed to fetch products from database:", error);
+			return [];
+		}
 	}
 
-	static saveProducts(products: Product[]): void {
-		localStorage.setItem(STORAGE_KEYS.ADMIN_PRODUCTS, JSON.stringify(products));
+	// Deprecated: Products are now automatically saved to database via individual update functions
+	static saveProducts(): void {
+		console.warn(
+			"saveProducts is deprecated. Use individual update functions for database persistence."
+		);
 	}
 
 	static async updateProductPrice(

@@ -1,30 +1,46 @@
 /**
- * Service Layer for Pricing Operations
- * Follows Single Responsibility Principle
- * Uses Strategy Pattern for different pricing algorithms
+ * Service layer for dynamic pricing operations.
+ * Uses Strategy Pattern for different pricing algorithms.
  */
 
 import type { Product } from "../../database/products";
 import type { SalesRecord } from "../../types/admin";
+import type { PricingStrategy } from "./PricingStrategy";
 import { updateProductPrice } from "../../database/products";
-import { PricingStrategy, HybridPricing } from "./PricingStrategy";
+import { HybridPricing } from "./PricingStrategy";
 
+/**
+ * Pricing service that manages dynamic price calculations and updates.
+ * Implements Strategy Pattern to allow switching between pricing algorithms.
+ */
 export class PricingService {
 	private strategy: PricingStrategy;
 
+	/**
+	 * Creates a new PricingService instance.
+	 *
+	 * @param {PricingStrategy} strategy - The pricing strategy to use (defaults to HybridPricing).
+	 */
 	constructor(strategy: PricingStrategy = new HybridPricing()) {
 		this.strategy = strategy;
 	}
 
 	/**
-	 * Set a different pricing strategy
+	 * Sets a different pricing strategy.
+	 *
+	 * @param {PricingStrategy} strategy - The new pricing strategy to use.
 	 */
 	setStrategy(strategy: PricingStrategy): void {
 		this.strategy = strategy;
 	}
 
 	/**
-	 * Calculate new price for a product using current strategy
+	 * Calculates new price for a product using the current strategy.
+	 *
+	 * @param {Product} product - The product to price.
+	 * @param {SalesRecord[]} salesHistory - Historical sales data.
+	 * @param {number} [timeWindowHours] - Time window for analysis.
+	 * @returns {number} The calculated price.
 	 */
 	calculatePrice(
 		product: Product,
@@ -35,7 +51,12 @@ export class PricingService {
 	}
 
 	/**
-	 * Apply dynamic pricing to a single product
+	 * Applies dynamic pricing to a single product and updates the database.
+	 *
+	 * @param {Product} product - The product to update.
+	 * @param {SalesRecord[]} salesHistory - Historical sales data.
+	 * @param {number} minPriceChange - Minimum price change required to update.
+	 * @returns {Promise<number>} The final price (new or unchanged).
 	 */
 	async applyDynamicPricing(
 		product: Product,
@@ -66,7 +87,11 @@ export class PricingService {
 	}
 
 	/**
-	 * Apply dynamic pricing to multiple products
+	 * Applies dynamic pricing to multiple products in batch.
+	 *
+	 * @param {Product[]} products - Array of products to update.
+	 * @param {SalesRecord[]} salesHistory - Historical sales data.
+	 * @returns {Promise<Product[]>} Array of updated products with new prices.
 	 */
 	async applyDynamicPricingBatch(
 		products: Product[],
@@ -84,7 +109,11 @@ export class PricingService {
 	}
 
 	/**
-	 * Get pricing analysis for a product
+	 * Provides comprehensive pricing analysis for a product.
+	 *
+	 * @param {Product} product - The product to analyze.
+	 * @param {SalesRecord[]} salesHistory - Historical sales data.
+	 * @returns {Object} Detailed pricing analysis including suggested price and market conditions.
 	 */
 	getPricingAnalysis(
 		product: Product,

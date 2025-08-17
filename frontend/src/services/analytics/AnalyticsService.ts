@@ -1,7 +1,6 @@
 /**
- * Analytics Service - Separated from AdminService
- * Follows Single Responsibility Principle
- * Handles all analytics calculations
+ * Analytics service for economic calculations and market analysis.
+ * Handles all analytics computations for the economy simulation.
  */
 
 import type { Product } from "../../database/products";
@@ -11,9 +10,17 @@ import type {
 	EconomicMetrics
 } from "../../types/admin";
 
+/**
+ * Service class for economic analytics and market analysis.
+ * Provides statistical calculations and market insights.
+ */
 export class AnalyticsService {
 	/**
-	 * Calculate statistics for a specific product
+	 * Calculates comprehensive statistics for a specific product.
+	 *
+	 * @param {string} productId - The ID of the product to analyze.
+	 * @param {SalesRecord[]} salesHistory - Complete sales transaction history.
+	 * @returns {ProductStats} Statistical analysis including sales volume, revenue, and price history.
 	 */
 	static calculateProductStats(
 		productId: string,
@@ -48,7 +55,11 @@ export class AnalyticsService {
 	}
 
 	/**
-	 * Calculate overall economic metrics
+	 * Calculates comprehensive economic metrics for the entire marketplace.
+	 *
+	 * @param {SalesRecord[]} salesHistory - Complete sales transaction history.
+	 * @param {Product[]} products - Array of all products in the system.
+	 * @returns {EconomicMetrics} Overall economic indicators including revenue, volatility, and inflation.
 	 */
 	static calculateEconomicMetrics(
 		salesHistory: SalesRecord[],
@@ -90,7 +101,10 @@ export class AnalyticsService {
 	}
 
 	/**
-	 * Get top selling products
+	 * Identifies and ranks the top-selling products by volume.
+	 *
+	 * @param {SalesRecord[]} salesHistory - Complete sales transaction history.
+	 * @returns {ProductStats[]} Array of top 5 products ranked by total sales volume.
 	 */
 	static getTopProducts(salesHistory: SalesRecord[]): ProductStats[] {
 		const productIds = [...new Set(salesHistory.map((sale) => sale.productId))];
@@ -102,7 +116,12 @@ export class AnalyticsService {
 	}
 
 	/**
-	 * Calculate market volatility based on price changes
+	 * Calculates market volatility based on price fluctuations.
+	 * Uses standard deviation of price changes across all products.
+	 *
+	 * @param {SalesRecord[]} salesHistory - Complete sales transaction history.
+	 * @param {Product[]} products - Array of all products in the system.
+	 * @returns {number} Market volatility index (higher values indicate more instability).
 	 */
 	private static calculateMarketVolatility(
 		salesHistory: SalesRecord[],
@@ -132,7 +151,10 @@ export class AnalyticsService {
 	}
 
 	/**
-	 * Calculate price inflation
+	 * Calculates price inflation by comparing recent vs. historical prices.
+	 *
+	 * @param {SalesRecord[]} salesHistory - Complete sales transaction history.
+	 * @returns {number} Price inflation percentage (positive = inflation, negative = deflation).
 	 */
 	private static calculatePriceInflation(salesHistory: SalesRecord[]): number {
 		const recentSales = salesHistory.slice(-10); // Last 10 sales
@@ -153,7 +175,11 @@ export class AnalyticsService {
 	}
 
 	/**
-	 * Get sales trends for a time period
+	 * Analyzes sales trends over a specified time period.
+	 *
+	 * @param {SalesRecord[]} salesHistory - Complete sales transaction history.
+	 * @param {number} timeWindowHours - Time window for analysis in hours.
+	 * @returns {Object} Sales trends data including hourly breakdown and totals.
 	 */
 	static getSalesTrends(
 		salesHistory: SalesRecord[],

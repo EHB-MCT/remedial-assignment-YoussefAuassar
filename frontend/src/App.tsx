@@ -2,7 +2,6 @@ import Navigation from "./components/common/Navigation";
 import Shop from "./pages/Shop";
 import Admin from "./pages/Admin";
 import { useState } from "react";
-import "./App.css";
 
 function App() {
 	const [tab, setTab] = useState<"shop" | "admin">("shop");

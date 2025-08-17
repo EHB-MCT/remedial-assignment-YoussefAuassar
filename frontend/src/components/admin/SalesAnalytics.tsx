@@ -1,3 +1,6 @@
+/**
+ * SalesAnalytics component - Displays sales statistics and analytics for selected products
+ */
 import type { Product } from "../../database/products";
 import type { ProductStats } from "../../types/admin";
 

@@ -7,28 +7,23 @@ import { useAdmin } from "../hooks/useAdmin";
 import { ADMIN_CONSTANTS } from "../constants/storage";
 
 export default function Admin() {
-	console.log("Admin component rendering..."); // Debug log
+	// React hooks must be called at the top level, not inside try-catch
+	const {
+		products,
+		selectedProduct,
+		economicMetrics,
+		isLoading,
+		error,
+		setSelectedProduct,
+		updateProductPrice,
+		updateProductStock,
+		getProductStats,
+		getTopProducts,
+		clearError
+	} = useAdmin();
 
 	try {
-		const {
-			products,
-			selectedProduct,
-			economicMetrics,
-			isLoading,
-			error,
-			setSelectedProduct,
-			updateProductPrice,
-			updateProductStock,
-			resetEconomy,
-			getProductStats,
-			getTopProducts,
-			clearError
-		} = useAdmin();
-
-		console.log("Admin hook data:", { products, isLoading, error }); // Debug log
-
 		if (isLoading) {
-			console.log("Showing loading state..."); // Debug log
 			return (
 				<div className="min-h-screen flex items-center justify-center">
 					<div className="text-center">
@@ -38,8 +33,6 @@ export default function Admin() {
 				</div>
 			);
 		}
-
-		console.log("Rendering admin content..."); // Debug log
 
 		return (
 			<div className="max-w-7xl mx-auto px-4 py-6">
@@ -85,7 +78,6 @@ export default function Admin() {
 							products={products}
 							onUpdatePrice={updateProductPrice}
 							onUpdateStock={updateProductStock}
-							onResetEconomy={resetEconomy}
 						/>
 					</div>
 

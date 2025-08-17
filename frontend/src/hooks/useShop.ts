@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { fetchProducts, type Product } from "../lib/supabase";
+import { fetchProducts } from "../lib/supabase";
+import type { Product } from "../database/products";
 import type { CartItem } from "../types/cart";
 import { addSaleRecord } from "../database/sales";
 import type { DBSalesRecord } from "../types/admin";
@@ -8,6 +9,7 @@ import { AdminService } from "../services/adminService";
 export function useShop() {
 	const [products, setProducts] = useState<Product[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 
 	// Load products from database on component mount
 	useEffect(() => {
@@ -83,9 +85,11 @@ export function useShop() {
 
 	const checkout = async () => {
 		if (cartTotal > balance) {
-			alert("Onvoldoende saldo");
+			setError("Onvoldoende saldo om deze aankoop te voltooien");
 			return;
 		}
+
+		setError(null); // Clear any previous errors
 
 		try {
 			console.log("Starting checkout process...");
@@ -178,9 +182,11 @@ export function useShop() {
 			setCart([]);
 		} catch (error) {
 			console.error("Checkout failed:", error);
-			alert("Checkout failed. Please try again.");
+			setError("Checkout mislukt. Probeer het opnieuw.");
 		}
 	};
+
+	const clearError = () => setError(null);
 
 	return {
 		products,
@@ -188,8 +194,10 @@ export function useShop() {
 		balance,
 		cart,
 		cartTotal,
+		error,
 		addToCart,
 		removeFromCart,
-		checkout
+		checkout,
+		clearError
 	};
 }

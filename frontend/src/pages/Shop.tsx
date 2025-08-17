@@ -1,3 +1,6 @@
+/**
+ * Shop page - Main shopping interface with product grid and shopping cart
+ */
 import ProductGrid from "../components/shop/ProductGrid";
 import ShoppingCart from "../components/shop/ShoppingCart";
 import { useShop } from "../hooks/useShop";
@@ -9,13 +12,36 @@ export default function Shop() {
 		balance,
 		cart,
 		cartTotal,
+		error,
 		addToCart,
 		removeFromCart,
-		checkout
+		checkout,
+		clearError
 	} = useShop();
 
 	return (
 		<div className="max-w-7xl mx-auto px-4 py-6">
+			{/* Error Banner */}
+			{error && (
+				<div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center space-x-3">
+							<span className="text-red-600 text-xl">⚠️</span>
+							<div>
+								<h3 className="text-sm font-medium text-red-800">Fout</h3>
+								<p className="text-sm text-red-700">{error}</p>
+							</div>
+						</div>
+						<button
+							onClick={clearError}
+							className="text-red-400 hover:text-red-600 text-xl font-bold"
+						>
+							×
+						</button>
+					</div>
+				</div>
+			)}
+
 			{/* Saldo at the top spanning full width */}
 			<div className="mb-6 text-sm text-slate-600 text-left">
 				Saldo:{" "}

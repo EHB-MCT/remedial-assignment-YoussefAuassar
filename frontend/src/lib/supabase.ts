@@ -1,21 +1,17 @@
 // Supabase client setup - connects to the database
 import { createClient } from "@supabase/supabase-js";
+import type { Product } from "../database/products";
 
-const supabaseUrl = "https://hecovdqybmqtwmgobhak.supabase.co";
-const supabaseKey =
-	"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlY292ZHF5Ym1xdHdtZ29iaGFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNzIzMzgsImV4cCI6MjA3MDg0ODMzOH0.0RBgecGDyLywrSVmPlK-0TsPvWjDlFDMTVsqKayUlps";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+	throw new Error(
+		"Missing Supabase environment variables. Please check your .env.local file."
+	);
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Product interface matching your database
-export interface Product {
-	id: number;
-	name: string;
-	emoji: string;
-	price: number;
-	stock: number;
-	initialstock: number;
-}
 
 // Direct database fetch function
 export async function fetchProducts(): Promise<Product[]> {

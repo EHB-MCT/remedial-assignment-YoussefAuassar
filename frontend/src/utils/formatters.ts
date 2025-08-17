@@ -1,3 +1,6 @@
+/**
+ * Formatters utility - Collection of formatting functions for currency, dates, and percentages
+ */
 export const formatCurrency = (amount: number): string =>
 	`€${amount.toFixed(2)}`;
 

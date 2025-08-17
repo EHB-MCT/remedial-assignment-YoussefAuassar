@@ -1,3 +1,6 @@
+/**
+ * Navigation component - Main header with tab navigation between Shop and Admin views
+ */
 import { Beer, Settings } from "lucide-react";
 
 type NavigationProps = {

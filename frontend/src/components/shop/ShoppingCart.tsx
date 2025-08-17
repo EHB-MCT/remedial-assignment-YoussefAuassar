@@ -1,5 +1,5 @@
 import { ShoppingCart as ShoppingCartIcon } from "lucide-react";
-import type { Product } from "../../lib/supabase";
+import type { Product } from "../../database/products";
 import { niceCurrency } from "../../utils/currency";
 import CartRow from "./CartRow";
 

@@ -1,4 +1,3 @@
-import React from "react";
 import type { EconomicMetrics } from "../../types/admin";
 import { formatCurrency, formatPercentage } from "../../utils/formatters";
 

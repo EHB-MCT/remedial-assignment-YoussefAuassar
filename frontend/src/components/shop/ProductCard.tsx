@@ -1,5 +1,8 @@
+/**
+ * ProductCard component - Displays individual product with price, stock indicator, and add to cart button
+ */
 import { ShoppingCart } from "lucide-react";
-import type { Product } from "../../lib/supabase";
+import type { Product } from "../../database/products";
 import { niceCurrency } from "../../utils/currency";
 
 interface ProductCardProps {

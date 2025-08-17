@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { Product } from "../../database/products";
 import { ADMIN_CONSTANTS } from "../../constants/storage";
 
@@ -6,31 +6,23 @@ interface ProductManagementProps {
 	products: Product[];
 	onUpdatePrice: (productId: string, newPrice: number) => void;
 	onUpdateStock: (productId: string, newStock: number) => void;
-	onResetEconomy: () => void;
 }
 
 export default function ProductManagement({
 	products,
 	onUpdatePrice,
-	onUpdateStock,
-	onResetEconomy
+	onUpdateStock
 }: ProductManagementProps) {
 	// Track which product is currently being edited
-	const [editingProduct, setEditingProduct] = useState<string | null>(null);
+	const [editingProduct, setEditingProduct] = useState<number | null>(null);
 
 	return (
 		<div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-			{/* Header with title and reset button */}
-			<div className="flex items-center justify-between mb-6">
+			{/* Header with title */}
+			<div className="mb-6">
 				<h2 className="text-xl font-semibold text-slate-900">
 					Product Management
 				</h2>
-				<button
-					onClick={onResetEconomy}
-					className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
-				>
-					Reset Economy
-				</button>
 			</div>
 
 			{/* Product table */}
@@ -101,7 +93,7 @@ function ProductRow({
 	// Handle price updates with validation
 	const handlePriceUpdate = () => {
 		if (tempPrice !== product.price) {
-			onUpdatePrice(product.id, tempPrice);
+			onUpdatePrice(product.id.toString(), tempPrice);
 		}
 		onEditCancel();
 	};
@@ -109,7 +101,7 @@ function ProductRow({
 	// Handle stock updates with validation
 	const handleStockUpdate = () => {
 		if (tempStock !== product.stock) {
-			onUpdateStock(product.id, tempStock);
+			onUpdateStock(product.id.toString(), tempStock);
 		}
 		onEditCancel();
 	};
@@ -130,7 +122,7 @@ function ProductRow({
 					<div>
 						<div className="font-medium text-slate-900">{product.name}</div>
 						<div className="text-sm text-slate-500">
-							Initial: {product.initialStock}
+							Initial: {product.initialstock}
 						</div>
 					</div>
 				</div>

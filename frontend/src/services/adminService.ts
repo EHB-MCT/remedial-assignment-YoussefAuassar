@@ -5,7 +5,7 @@ import type {
 	EconomicMetrics,
 	DBSalesRecord
 } from "../types/admin";
-import { DEFAULT_QUANTITY_RANGE } from "../constants/storage";
+
 import {
 	getSalesHistory as dbGetSalesHistory,
 	addSaleRecord as dbAddSaleRecord
@@ -213,64 +213,6 @@ export class AdminService {
 			.map((id) => this.calculateProductStats(id, salesHistory))
 			.sort((a, b) => b.totalSold - a.totalSold)
 			.slice(0, 5);
-	}
-
-	// Economy Simulation
-	static async simulatePurchase(
-		productId: string,
-		products: Product[],
-		salesHistory: SalesRecord[]
-	): Promise<{
-		updatedProducts: Product[];
-		updatedSales: SalesRecord[];
-	}> {
-		const product = products.find((p) => p.id === parseInt(productId));
-		if (!product || product.stock <= 0) {
-			return { updatedProducts: products, updatedSales: salesHistory };
-		}
-
-		const quantity =
-			Math.floor(
-				Math.random() *
-					(DEFAULT_QUANTITY_RANGE.max - DEFAULT_QUANTITY_RANGE.min + 1)
-			) + DEFAULT_QUANTITY_RANGE.min;
-
-		// Create sale record for database
-		const newSale: DBSalesRecord = {
-			product_id: parseInt(productId),
-			quantity,
-			revenue: quantity * product.price,
-			price_at_sale: product.price
-		};
-
-		// Save to database
-		const success = await this.addSaleRecord(newSale);
-		if (!success) {
-			console.error("Failed to save sale to database");
-			return { updatedProducts: products, updatedSales: salesHistory };
-		}
-
-		const stockUpdatedProducts = await this.updateProductStock(
-			products,
-			productId,
-			product.stock - quantity
-		);
-
-		// Apply dynamic pricing after the sale
-		const updatedProducts = await this.applyDynamicPricing(
-			productId,
-			stockUpdatedProducts,
-			salesHistory
-		);
-
-		// Return updated products and current sales history
-		const updatedSales = await this.getSalesHistory();
-		return { updatedProducts, updatedSales };
-	}
-
-	// Reset functionality
-	static resetEconomy(products: Product[]): Product[] {
-		return products.map((p) => ({ ...p, stock: p.initialstock }));
 	}
 
 	// Dynamic Pricing System

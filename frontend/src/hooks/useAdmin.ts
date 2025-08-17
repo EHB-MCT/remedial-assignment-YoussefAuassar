@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type { Product } from "../lib/supabase";
+import type { Product } from "../database/products";
 import type { SalesRecord, EconomicMetrics } from "../types/admin";
 import { AdminService } from "../services/adminService";
 import { fetchProducts } from "../lib/supabase";
@@ -163,29 +163,6 @@ export function useAdmin() {
 
 	// Note: simulatePurchase removed - not needed for core economic simulation
 
-	const resetEconomy = useCallback(() => {
-		if (
-			confirm(
-				"⚠️ Are you sure you want to reset the entire economy?\n\nThis will:\n• Clear all sales data\n• Reset all product stocks\n• Cannot be undone\n\nType 'RESET' to confirm:"
-			)
-		) {
-			try {
-				setError(null);
-				setSalesHistory([]);
-				setProducts((prevProducts) => {
-					const resetProducts = AdminService.resetEconomy(prevProducts);
-					AdminService.saveProducts();
-					AdminService.saveSalesHistory();
-					return resetProducts;
-				});
-			} catch (err) {
-				const errorMessage =
-					err instanceof Error ? err.message : "Failed to reset economy";
-				setError(errorMessage);
-			}
-		}
-	}, []);
-
 	const getProductStats = useCallback(
 		(productId: string) => {
 			console.log("🔍 getProductStats called with:", productId);
@@ -224,7 +201,6 @@ export function useAdmin() {
 		setSelectedProduct,
 		updateProductPrice,
 		updateProductStock,
-		resetEconomy,
 		clearError,
 
 		// Computed values
